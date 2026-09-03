@@ -1,0 +1,19 @@
+Most voice assistants answer preparedness questions. ReadyNest does something different: it keeps a household plan moving until the work is finished, while the homeowner stays in control.
+
+I begin with one request: help this fictional household prepare for Hurricane Iris. ReadyNest loads the remembered household profile, including three people, a dog, one vehicle, and a refrigerated prescription.
+
+From that single goal, the agent audits fictional supplies, checks the route, assigns owners and deadlines, schedules a household check-in, and builds a visible forty-eight-hour action board. The homeowner does not have to translate the situation into a dozen separate commands.
+
+The agent automatically completes reversible planning steps, but it stops at a confirmation gate before the simulated supply action. Every tool-like action, open task, priority, and owner remains visible on the screen.
+
+Now the situation changes. Landfall moves eighteen hours earlier, and the original route becomes congested. ReadyNest does not discard the plan or ask the family to start again.
+
+It updates the same persistent state, switches to the backup route, shortens the deadlines, and promotes the medication kit, fuel, pet kit, and documents to critical priority. The plan adapts while preserving the work already completed.
+
+Next, I start a new session. The conversation resets, but the household plan survives. ReadyNest restores the remembered context and summarizes the remaining work instead of asking the user to repeat everything.
+
+Consequential changes still require a person. After explicit confirmation, ReadyNest completes only the simulated supply step and clearly states that no purchase, payment, message, or real route guidance occurred.
+
+Every handoff stays visible in the activity timeline. ReadyNest is a zero-cost Alexa Plus simulation of persistent memory, multi-step orchestration, autonomous replanning, voice-and-screen continuity, and human-centered control.
+
+The live application and the MIT-licensed source code are available at the links shown on screen.
