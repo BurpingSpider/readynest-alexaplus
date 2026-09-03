@@ -1,0 +1,99 @@
+name: Build ReadyNest demo video
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/demo_narration.txt"
+      - "scripts/record_demo.mjs"
+      - ".github/workflows/build-demo-video.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build-video:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install video and narration tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-dejavu-core
+          python -m pip install --upgrade pip
+          python -m pip install edge-tts
+          npm install --no-save playwright@1.61.1
+          npx playwright install --with-deps chromium
+
+      - name: Generate natural narration and timed captions
+        run: |
+          mkdir -p build media
+          edge-tts \
+            --voice en-US-AvaMultilingualNeural \
+            --rate=-3% \
+            --pitch=-1Hz \
+            --file scripts/demo_narration.txt \
+            --write-media build/narration.mp3 \
+            --write-subtitles build/captions.vtt
+          ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 build/narration.mp3
+
+      - name: Record the real ReadyNest application
+        run: |
+          python3 -m http.server 8080 >build/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          AUDIO_DURATION=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 build/narration.mp3)
+          DEMO_DURATION=$(python -c "print(float('$AUDIO_DURATION') + 2.4)")
+          DEMO_DURATION="$DEMO_DURATION" node scripts/record_demo.mjs
+
+      - name: Assemble the final captioned MP4
+        run: |
+          AUDIO_DURATION=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 build/narration.mp3)
+          DEMO_DURATION=$(python -c "print(float('$AUDIO_DURATION') + 2.4)")
+          END_CARD=$(python -c "print(max(0, float('$DEMO_DURATION') - 8.5))")
+          FADE_OUT=$(python -c "print(max(0, float('$DEMO_DURATION') - 0.6))")
+          ffmpeg -y -hide_banner -loglevel error \
+            -i build/readynest-screen.webm \
+            -i build/narration.mp3 \
+            -filter_complex "[0:v]trim=duration=${DEMO_DURATION},setpts=PTS-STARTPTS,fps=30,fade=t=in:st=0:d=0.35,fade=t=out:st=${FADE_OUT}:d=0.5,subtitles=build/captions.vtt:force_style='FontName=DejaVu Sans,FontSize=28,PrimaryColour=&H00FFFFFF,OutlineColour=&H90000000,BorderStyle=1,Outline=3,Shadow=0,MarginV=38,Alignment=2',drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='ReadyNest  |  Alexa+ simulated experience':x=(w-text_w)/2:y=30:fontsize=39:fontcolor=white:box=1:boxcolor=black@0.58:boxborderw=13:enable='lt(t,5.5)',drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='ONE REQUEST  -  ONE COORDINATED PLAN':x=(w-text_w)/2:y=30:fontsize=34:fontcolor=white:box=1:boxcolor=black@0.58:boxborderw=12:enable='between(t,13,43)',drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='CONDITIONS CHANGE  -  THE PLAN REBUILDS':x=(w-text_w)/2:y=30:fontsize=34:fontcolor=white:box=1:boxcolor=black@0.58:boxborderw=12:enable='between(t,54,82)',drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='NEW SESSION  -  THE MEMORY SURVIVES':x=(w-text_w)/2:y=30:fontsize=34:fontcolor=white:box=1:boxcolor=black@0.58:boxborderw=12:enable='between(t,91,108)',drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='HUMAN CONFIRMATION BEFORE CONSEQUENCES':x=(w-text_w)/2:y=30:fontsize=34:fontcolor=white:box=1:boxcolor=black@0.58:boxborderw=12:enable='between(t,109,125)',drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='Live demo  |  readynest-alexaplus.vercel.app':x=(w-text_w)/2:y=30:fontsize=36:fontcolor=white:box=1:boxcolor=black@0.64:boxborderw=13:enable='gte(t,${END_CARD})'[v];[1:a]loudnorm=I=-16:TP=-1.5:LRA=8,apad,atrim=duration=${DEMO_DURATION},afade=t=in:st=0:d=0.25,afade=t=out:st=${FADE_OUT}:d=0.5[a]" \
+            -map "[v]" -map "[a]" \
+            -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p \
+            -c:a aac -b:a 192k -movflags +faststart \
+            media/ReadyNest_AlexaPlus_Demo_REDESIGNED.mp4
+          ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,width,height,channels -of json media/ReadyNest_AlexaPlus_Demo_REDESIGNED.mp4
+          test $(stat -c%s media/ReadyNest_AlexaPlus_Demo_REDESIGNED.mp4) -gt 1000000
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReadyNest-AlexaPlus-Demo
+          path: media/ReadyNest_AlexaPlus_Demo_REDESIGNED.mp4
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit the permanent downloadable video
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add media/ReadyNest_AlexaPlus_Demo_REDESIGNED.mp4
+          if git diff --cached --quiet; then
+            echo "Video already matches the repository copy."
+          else
+            git commit -m "Add permanent ReadyNest demo video [skip ci]"
+            git push
+          fi
