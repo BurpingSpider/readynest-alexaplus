@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ReadyNest — a zero-cost simulated Alexa+ agentic household readiness experience." />
+  <title>ReadyNest — Alexa+ Simulation</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div>
+          <h1>ReadyNest</h1>
+          <p>Household resilience, orchestrated</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span class="simulation-badge">Alexa+ simulated experience</span>
+        <span id="sessionBadge" class="session-badge"></span>
+        <button id="newSession" class="ghost">New session</button>
+        <button id="resetDemo" class="ghost danger">Reset</button>
+      </div>
+    </header>
+
+    <section class="hero-strip">
+      <div>
+        <span class="eyebrow">Agentic demo</span>
+        <h2>One voice request becomes a household action plan.</h2>
+        <p>Persistent context, autonomous tool orchestration, human confirmation gates, and real-time replanning—all in a fully local simulation.</p>
+      </div>
+      <div class="hero-kpis">
+        <div><strong>$0</strong><span>runtime cost</span></div>
+        <div><strong>0</strong><span>external APIs</span></div>
+        <div><strong>100%</strong><span>local demo</span></div>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <aside class="left-column">
+        <div id="hazardCard" class="panel accent"></div>
+        <div id="memoryCard" class="panel"></div>
+        <div class="panel">
+          <div class="panel-heading">
+            <div><span class="eyebrow">Inventory</span><h3>Supply gaps</h3></div>
+          </div>
+          <div id="supplyList"></div>
+        </div>
+      </aside>
+
+      <section class="center-column">
+        <div class="conversation-panel">
+          <div class="conversation-header">
+            <div>
+              <span class="live-dot"></span>
+              <strong>Voice + screen simulation</strong>
+            </div>
+            <span>state survives sessions</span>
+          </div>
+          <div id="conversation" class="conversation" aria-live="polite"></div>
+          <div class="quick-actions">
+            <button data-command="Help us get ready for Hurricane Iris. We have two adults, one child, a dog, and one refrigerated prescription.">Build 48-hour plan</button>
+            <button data-command="Situation changed. Landfall moved up 18 hours and our primary route is congested.">Situation changed</button>
+            <button data-command="Where are we? Give me the status.">Resume from memory</button>
+          </div>
+          <div class="composer">
+            <div class="mic" aria-hidden="true">●</div>
+            <input id="commandInput" autocomplete="off" placeholder="Type what you would say to Alexa+…" />
+            <button id="sendButton">Send</button>
+          </div>
+        </div>
+        <div id="confirmationPanel"></div>
+        <div class="panel task-panel">
+          <div class="panel-heading">
+            <div><span class="eyebrow">Shared plan</span><h3>Household action board</h3></div>
+            <span class="muted">priority + owner + due time</span>
+          </div>
+          <div id="taskList" class="task-list"></div>
+        </div>
+      </section>
+
+      <aside class="right-column">
+        <div class="panel">
+          <div class="panel-heading">
+            <div><span class="eyebrow">Explainable autonomy</span><h3>Agent activity</h3></div>
+          </div>
+          <div id="activityList" class="activity-list"></div>
+        </div>
+        <div class="panel principles">
+          <span class="eyebrow">Built for judging</span>
+          <h3>Why this is agentic</h3>
+          <ul>
+            <li><span>01</span>Decomposes one goal into multiple service actions.</li>
+            <li><span>02</span>Maintains household state across sessions.</li>
+            <li><span>03</span>Replans automatically when conditions change.</li>
+            <li><span>04</span>Requires consent before consequential actions.</li>
+            <li><span>05</span>Pairs concise voice responses with visual cards.</li>
+          </ul>
+        </div>
+      </aside>
+    </section>
+  </main>
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
